@@ -1,0 +1,4 @@
+requests
+argparse
+urllib3
+termcolor

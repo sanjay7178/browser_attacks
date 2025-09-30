@@ -1,0 +1,871 @@
+{% extends "base.html" %}
+
+{% block title %}ClickGrab - Threat Intelligence Analysis{% endblock %}
+
+{% block head_extra %}
+<style>
+    /* Blog-specific styles */
+    .analysis-hero {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        text-align: center;
+        padding: 4rem 2rem;
+        border-radius: var(--border-radius);
+        margin-bottom: 3rem;
+        box-shadow: var(--shadow-lg);
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .analysis-hero::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="20" cy="20" r="2" fill="rgba(255,255,255,0.1)"/><circle cx="80" cy="40" r="1.5" fill="rgba(255,255,255,0.1)"/><circle cx="40" cy="60" r="1" fill="rgba(255,255,255,0.1)"/><circle cx="70" cy="80" r="2.5" fill="rgba(255,255,255,0.1)"/></svg>') repeat;
+        pointer-events: none;
+    }
+    
+    .analysis-hero .content {
+        position: relative;
+        z-index: 1;
+    }
+    
+    .analysis-hero h1 {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+        border-bottom: none;
+        color: white;
+        background: linear-gradient(45deg, #fff, #f0f8ff);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+    
+    .analysis-hero p {
+        font-size: 1.3rem;
+        opacity: 1;
+        max-width: 600px;
+        margin: 0 auto;
+        color: rgba(255, 255, 255, 0.95);
+        text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+        font-weight: 400;
+    }
+    
+    /* Key Insights Section */
+    .key-insights {
+        background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+        border-radius: 16px;
+        padding: 2rem;
+        margin-bottom: 3rem;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        border: 1px solid #e2e8f0;
+    }
+    
+    .insights-header {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .insights-icon {
+        width: 48px;
+        height: 48px;
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
+    }
+    
+    .insights-title {
+        font-size: 1.75rem;
+        font-weight: 700;
+        color: var(--text-color);
+    }
+    
+    .insights-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1.5rem;
+    }
+    
+    .insight-item {
+        text-align: center;
+        padding: 1.5rem;
+        background: white;
+        border-radius: 12px;
+        border: 1px solid #e2e8f0;
+        transition: all 0.3s ease;
+    }
+    
+    .insight-item:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+    }
+    
+    .insight-value {
+        font-size: 2.5rem;
+        font-weight: 700;
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        display: block;
+        margin-bottom: 0.5rem;
+    }
+    
+    .insight-label {
+        font-size: 0.9rem;
+        color: var(--text-light);
+        font-weight: 500;
+    }
+    
+    /* Search and Filter Bar */
+    .analysis-controls {
+        background: white;
+        border-radius: 16px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        border: 1px solid #e2e8f0;
+    }
+    
+    .controls-row {
+        display: flex;
+        gap: 1rem;
+        align-items: center;
+        flex-wrap: wrap;
+    }
+    
+    .search-box {
+        flex: 2;
+        position: relative;
+        min-width: 300px;
+    }
+    
+    .search-input {
+        width: 100%;
+        padding: 0.75rem 1rem 0.75rem 3rem;
+        border: 2px solid #e2e8f0;
+        border-radius: 10px;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+    }
+    
+    .search-input:focus {
+        outline: none;
+        border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+    
+    .search-icon {
+        position: absolute;
+        left: 1rem;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #94a3b8;
+    }
+    
+    .filter-chips {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+        flex: 1;
+    }
+    
+    .filter-chip {
+        padding: 0.5rem 1rem;
+        background: #f1f5f9;
+        border: 2px solid transparent;
+        border-radius: 20px;
+        font-size: 0.9rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        color: var(--text-light);
+    }
+    
+    .filter-chip:hover {
+        background: #e2e8f0;
+    }
+    
+    .filter-chip.active {
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        color: white;
+        border-color: transparent;
+    }
+    
+    .blog-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+        gap: 2rem;
+        margin-bottom: 3rem;
+    }
+    
+    .blog-card {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 8px 32px rgba(0,0,0,0.12);
+        overflow: hidden;
+        transition: all 0.3s ease;
+        border: 1px solid rgba(255,255,255,0.2);
+        position: relative;
+        opacity: 0;
+        animation: fadeInUp 0.6s ease forwards;
+    }
+    
+    .blog-card:nth-child(1) { animation-delay: 0.1s; }
+    .blog-card:nth-child(2) { animation-delay: 0.2s; }
+    .blog-card:nth-child(3) { animation-delay: 0.3s; }
+    
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    .blog-card:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+    }
+    
+    .blog-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: linear-gradient(90deg, var(--primary-color), var(--accent-color));
+    }
+    
+    .blog-header {
+        background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+        padding: 1.5rem;
+        border-bottom: 1px solid #e2e8f0;
+    }
+    
+    .blog-meta {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 1rem;
+        font-size: 0.9rem;
+        color: var(--text-light);
+    }
+    
+    .blog-date {
+        background: var(--primary-color);
+        color: white;
+        padding: 0.25rem 0.75rem;
+        border-radius: 20px;
+        font-weight: 500;
+        font-size: 0.8rem;
+    }
+    
+    .blog-category {
+        background: linear-gradient(45deg, #ff6b6b, #ee5a24);
+        color: white;
+        padding: 0.25rem 0.75rem;
+        border-radius: 20px;
+        font-weight: 500;
+        font-size: 0.8rem;
+    }
+    
+    .blog-title {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--text-color);
+        margin-bottom: 0.5rem;
+        line-height: 1.3;
+    }
+    
+    .blog-excerpt {
+        color: var(--text-light);
+        line-height: 1.6;
+        font-size: 1rem;
+    }
+    
+    .blog-content {
+        padding: 1.5rem;
+    }
+    
+    .blog-stats {
+        display: flex;
+        gap: 1.5rem;
+        margin-bottom: 1.5rem;
+        flex-wrap: wrap;
+    }
+    
+    .blog-stat {
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        color: white;
+        padding: 0.75rem 1rem;
+        border-radius: 8px;
+        text-align: center;
+        flex: 1;
+        min-width: 80px;
+    }
+    
+    .blog-stat-number {
+        font-size: 1.5rem;
+        font-weight: 700;
+        display: block;
+    }
+    
+    .blog-stat-label {
+        font-size: 0.75rem;
+        opacity: 0.9;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .blog-tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .blog-tag {
+        background: linear-gradient(45deg, #f093fb, #f5576c);
+        color: white;
+        padding: 0.25rem 0.75rem;
+        border-radius: 15px;
+        font-size: 0.8rem;
+        font-weight: 500;
+    }
+    
+    .blog-actions {
+        display: flex;
+        gap: 1rem;
+        align-items: center;
+    }
+    
+    .read-more {
+        background: linear-gradient(45deg, var(--primary-color), #4c51bf);
+        color: white;
+        padding: 0.75rem 1.5rem;
+        border-radius: 25px;
+        text-decoration: none;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(37, 99, 235, 0.3);
+        flex: 1;
+        text-align: center;
+    }
+    
+    .read-more:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(37, 99, 235, 0.4);
+        color: white;
+    }
+    
+    .share-btn {
+        background: linear-gradient(45deg, #48bb78, #38a169);
+        color: white;
+        padding: 0.75rem;
+        border-radius: 50%;
+        text-decoration: none;
+        transition: all 0.3s ease;
+        width: 45px;
+        height: 45px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .share-btn:hover {
+        transform: rotate(5deg) scale(1.1);
+        color: white;
+    }
+    
+    .featured-badge {
+        position: absolute;
+        top: 1rem;
+        right: 1rem;
+        background: linear-gradient(45deg, #ffd700, #ffed4e);
+        color: #000;
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 700;
+        z-index: 2;
+        box-shadow: 0 4px 15px rgba(255, 215, 0, 0.3);
+    }
+    
+    /* Newsletter Signup */
+    .newsletter-section {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 16px;
+        padding: 3rem 2rem;
+        margin: 3rem 0;
+        text-align: center;
+        color: white;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .newsletter-section::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -50%;
+        width: 200%;
+        height: 200%;
+        background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+        animation: pulse 15s ease-in-out infinite;
+    }
+    
+    @keyframes pulse {
+        0%, 100% { transform: scale(0.8); opacity: 0.5; }
+        50% { transform: scale(1.2); opacity: 0.8; }
+    }
+    
+    .newsletter-content {
+        position: relative;
+        z-index: 1;
+    }
+    
+    .newsletter-title {
+        font-size: 2rem;
+        margin-bottom: 1rem;
+        font-weight: 700;
+        color: white;
+    }
+    
+    .newsletter-desc {
+        font-size: 1.1rem;
+        margin-bottom: 2rem;
+        opacity: 1;
+        color: white;
+    }
+    
+    .newsletter-form {
+        display: flex;
+        gap: 1rem;
+        max-width: 500px;
+        margin: 0 auto;
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+    
+    .newsletter-input {
+        flex: 1;
+        min-width: 250px;
+        padding: 0.75rem 1.5rem;
+        border: 2px solid rgba(255,255,255,0.3);
+        border-radius: 30px;
+        background: rgba(255,255,255,0.1);
+        color: white;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+    }
+    
+    .newsletter-input::placeholder {
+        color: rgba(255,255,255,0.7);
+    }
+    
+    .newsletter-input:focus {
+        outline: none;
+        border-color: white;
+        background: rgba(255,255,255,0.2);
+    }
+    
+    .newsletter-submit {
+        padding: 0.75rem 2rem;
+        background: white;
+        color: #667eea;
+        border: none;
+        border-radius: 30px;
+        font-weight: 600;
+        font-size: 1rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    }
+    
+    .newsletter-submit:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+    }
+    
+    .coming-soon {
+        text-align: center;
+        padding: 3rem 2rem;
+        background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+        border-radius: 12px;
+        border: 2px dashed #cbd5e0;
+        margin-top: 2rem;
+    }
+    
+    .coming-soon h3 {
+        color: var(--text-light);
+        margin-bottom: 1rem;
+    }
+    
+    .coming-soon p {
+        color: var(--text-light);
+        font-style: italic;
+    }
+    
+    /* No Results */
+    .no-results {
+        text-align: center;
+        padding: 3rem;
+        color: var(--text-light);
+        display: none;
+    }
+    
+    .no-results.visible {
+        display: block;
+    }
+    
+    @media (max-width: 768px) {
+        .analysis-hero h1 {
+            font-size: 2rem;
+        }
+        
+        .blog-grid {
+            grid-template-columns: 1fr;
+            gap: 1.5rem;
+        }
+        
+        .blog-stats {
+            flex-direction: column;
+        }
+        
+        .blog-actions {
+            flex-direction: column;
+        }
+        
+        .read-more {
+            width: 100%;
+        }
+        
+        .controls-row {
+            flex-direction: column;
+        }
+        
+        .search-box {
+            width: 100%;
+            min-width: auto;
+        }
+        
+        .insights-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="analysis-hero">
+    <div class="content">
+        <h1>🔍 Threat Intelligence Analysis</h1>
+        <p>Deep-dive research, technical analysis, and actionable intelligence from our security research team</p>
+    </div>
+</section>
+
+<!-- Key Insights -->
+<section class="key-insights">
+    <div class="insights-header">
+        <div class="insights-icon">💡</div>
+        <h2 class="insights-title">Research Insights</h2>
+    </div>
+    <div class="insights-grid">
+        <div class="insight-item">
+            <span class="insight-value">15K+</span>
+            <span class="insight-label">Sites Analyzed</span>
+        </div>
+        <div class="insight-item">
+            <span class="insight-value">247</span>
+            <span class="insight-label">Attack Patterns</span>
+        </div>
+        <div class="insight-item">
+            <span class="insight-value">89%</span>
+            <span class="insight-label">Detection Rate</span>
+        </div>
+        <div class="insight-item">
+            <span class="insight-value">12</span>
+            <span class="insight-label">Research Papers</span>
+        </div>
+    </div>
+</section>
+
+<!-- Search and Filter Controls -->
+<section class="analysis-controls">
+    <div class="controls-row">
+        <div class="search-box">
+            <span class="search-icon">🔍</span>
+            <input type="text" class="search-input" id="analysis-search" placeholder="Search analysis by title, tag, or content...">
+        </div>
+        <div class="filter-chips">
+            <button class="filter-chip active" data-filter="all">All</button>
+            <button class="filter-chip" data-filter="malware">Malware</button>
+            <button class="filter-chip" data-filter="social-engineering">Social Engineering</button>
+            <button class="filter-chip" data-filter="infrastructure">Infrastructure</button>
+            <button class="filter-chip" data-filter="trends">Trends</button>
+        </div>
+    </div>
+</section>
+
+<section class="blog-grid" id="analysis-grid">
+    {% for analysis in analysis_posts %}
+    <article class="blog-card">
+        {% if loop.first %}
+        <div class="featured-badge">✨ Featured</div>
+        {% endif %}
+        <div class="blog-header">
+            <div class="blog-meta">
+                <span class="blog-date">{{ analysis.date|dateformat }}</span>
+                <span class="blog-category">{{ analysis.category }}</span>
+            </div>
+            <h2 class="blog-title">{{ analysis.title }}</h2>
+            <p class="blog-excerpt">{{ analysis.excerpt }}</p>
+        </div>
+        <div class="blog-content">
+            <div class="blog-stats">
+                <div class="blog-stat">
+                    <span class="blog-stat-number">{{ analysis.stats.sites_analyzed }}</span>
+                    <span class="blog-stat-label">Sites Analyzed</span>
+                </div>
+                <div class="blog-stat">
+                    <span class="blog-stat-number">{{ analysis.stats.malicious_rate }}%</span>
+                    <span class="blog-stat-label">Malicious Rate</span>
+                </div>
+                <div class="blog-stat">
+                    <span class="blog-stat-number">{{ analysis.stats.attack_patterns }}</span>
+                    <span class="blog-stat-label">Attack Patterns</span>
+                </div>
+            </div>
+            
+            <div class="blog-tags">
+                {% for tag in analysis.tags %}
+                <span class="blog-tag">{{ tag }}</span>
+                {% endfor %}
+            </div>
+            
+            <div class="blog-actions">
+                <a href="{{ base_url }}/analysis/{{ analysis.slug }}.html" class="read-more">Read Full Analysis</a>
+                <a href="#share" class="share-btn" title="Share this analysis">📤</a>
+            </div>
+        </div>
+    </article>
+    {% endfor %}
+
+    {% if analysis_posts|length == 0 or analysis_posts|length == 1 %}
+    <!-- Coming Soon Card -->
+    <div class="coming-soon">
+        <h3>🚀 More Analysis Coming Soon</h3>
+        <p>We're continuously analyzing new threats and attack patterns. Check back regularly for the latest threat intelligence research and deep-dive technical analysis.</p>
+    </div>
+    {% endif %}
+</section>
+
+<!-- No Results Message -->
+<div class="no-results" id="no-results">
+    <h3>🔍 No analyses found</h3>
+    <p>Try adjusting your search or filters</p>
+</div>
+
+<!-- Newsletter Signup -->
+<section class="newsletter-section">
+    <div class="newsletter-content">
+        <h2 class="newsletter-title">🚀 Stay Ahead of Threats</h2>
+        <p class="newsletter-desc">Get weekly threat intelligence updates and exclusive research delivered to your inbox</p>
+        <form class="newsletter-form" action="https://formspree.io/f/mvgrqazq" method="POST" onsubmit="handleNewsletterSubmit(event)">
+            <input type="email" name="email" class="newsletter-input" placeholder="Enter your email" required>
+            <input type="hidden" name="_subject" value="New ClickGrab Newsletter Subscription">
+            <input type="hidden" name="_next" value="https://mhaggis.github.io/ClickGrab/analysis.html?subscribed=true">
+            <button type="submit" class="newsletter-submit">Subscribe</button>
+        </form>
+    </div>
+</section>
+
+<section class="about-project">
+    <h2>About Our Analysis</h2>
+    <p>Our threat intelligence analysis goes beyond automated reporting to provide deep technical insights into emerging attack patterns, obfuscation techniques, and defensive strategies. Each analysis includes:</p>
+    
+    <ul style="margin-left: 2rem; color: var(--text-light);">
+        <li><strong>Technical Deep Dives:</strong> Detailed examination of attack methodologies and code analysis</li>
+        <li><strong>Threat Actor Profiling:</strong> Infrastructure analysis and campaign attribution</li>
+        <li><strong>Defensive Strategies:</strong> Actionable recommendations and detection rules</li>
+        <li><strong>IOC Extraction:</strong> Ready-to-implement indicators of compromise</li>
+        <li><strong>Trend Analysis:</strong> Evolution tracking and predictive intelligence</li>
+    </ul>
+    
+    <p>Our research helps security teams stay ahead of evolving threats and implement proactive defense measures.</p>
+</section>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('analysis-search');
+    const filterChips = document.querySelectorAll('.filter-chip');
+    const analysisGrid = document.getElementById('analysis-grid');
+    const noResults = document.getElementById('no-results');
+    const blogCards = document.querySelectorAll('.blog-card');
+    
+    // Search functionality
+    searchInput.addEventListener('input', function(e) {
+        const searchTerm = e.target.value.toLowerCase();
+        filterAnalyses();
+    });
+    
+    // Filter functionality
+    filterChips.forEach(chip => {
+        chip.addEventListener('click', function() {
+            // Remove active class from all chips
+            filterChips.forEach(c => c.classList.remove('active'));
+            // Add active class to clicked chip
+            this.classList.add('active');
+            filterAnalyses();
+        });
+    });
+    
+    function filterAnalyses() {
+        const searchTerm = searchInput.value.toLowerCase();
+        const activeFilter = document.querySelector('.filter-chip.active').dataset.filter;
+        let visibleCount = 0;
+        
+        blogCards.forEach(card => {
+            const title = card.querySelector('.blog-title').textContent.toLowerCase();
+            const excerpt = card.querySelector('.blog-excerpt').textContent.toLowerCase();
+            const tags = Array.from(card.querySelectorAll('.blog-tag')).map(tag => tag.textContent.toLowerCase());
+            const category = card.querySelector('.blog-category').textContent.toLowerCase();
+            
+            // Check search term
+            const matchesSearch = searchTerm === '' || 
+                title.includes(searchTerm) || 
+                excerpt.includes(searchTerm) || 
+                tags.some(tag => tag.includes(searchTerm));
+            
+            // Check filter
+            let matchesFilter = activeFilter === 'all';
+            if (!matchesFilter) {
+                // Map filter values to expected categories/tags
+                const filterMap = {
+                    'malware': ['malware', 'trojan', 'virus', 'payload'],
+                    'social-engineering': ['social engineering', 'phishing', 'fake captcha', 'scam'],
+                    'infrastructure': ['infrastructure', 'c2', 'command control', 'hosting'],
+                    'trends': ['trends', 'statistics', 'analysis', 'patterns']
+                };
+                
+                const filterTerms = filterMap[activeFilter] || [activeFilter];
+                matchesFilter = filterTerms.some(term => 
+                    category.includes(term) || 
+                    tags.some(tag => tag.includes(term)) ||
+                    title.includes(term)
+                );
+            }
+            
+            // Show/hide card
+            if (matchesSearch && matchesFilter) {
+                card.style.display = 'block';
+                card.style.opacity = '0';
+                setTimeout(() => {
+                    card.style.opacity = '1';
+                }, 50);
+                visibleCount++;
+            } else {
+                card.style.display = 'none';
+            }
+        });
+        
+        // Show/hide no results message
+        if (visibleCount === 0) {
+            noResults.classList.add('visible');
+        } else {
+            noResults.classList.remove('visible');
+        }
+    }
+    
+    // Share functionality
+    document.querySelectorAll('.share-btn').forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            e.preventDefault();
+            const card = this.closest('.blog-card');
+            const title = card.querySelector('.blog-title').textContent;
+            const url = window.location.href;
+            
+            if (navigator.share) {
+                navigator.share({
+                    title: title,
+                    text: `Check out this threat analysis: ${title}`,
+                    url: url
+                }).catch(err => console.log('Error sharing:', err));
+            } else {
+                // Fallback - copy to clipboard
+                const text = `${title} - ${url}`;
+                navigator.clipboard.writeText(text).then(() => {
+                    // Visual feedback
+                    const originalText = this.innerHTML;
+                    this.innerHTML = '✓';
+                    setTimeout(() => {
+                        this.innerHTML = originalText;
+                    }, 2000);
+                });
+            }
+        });
+    });
+});
+
+// Newsletter form handler
+function handleNewsletterSubmit(event) {
+    const form = event.target;
+    const submitBtn = form.querySelector('.newsletter-submit');
+    
+    // Visual feedback
+    submitBtn.textContent = 'Subscribing...';
+    submitBtn.disabled = true;
+    
+    // Let the form submit naturally to Formspree
+    // The hidden _next field will redirect back with a success parameter
+    
+    // If they come back to the page with ?subscribed=true, show success
+    if (window.location.search.includes('subscribed=true')) {
+        submitBtn.textContent = '✓ Subscribed!';
+        submitBtn.style.background = '#22c55e';
+        setTimeout(() => {
+            submitBtn.textContent = 'Subscribe';
+            submitBtn.style.background = '';
+            submitBtn.disabled = false;
+            // Clean up URL
+            window.history.replaceState({}, document.title, window.location.pathname);
+        }, 3000);
+    }
+}
+
+// Add intersection observer for animations
+const observerOptions = {
+    threshold: 0.1,
+    rootMargin: '0px 0px -50px 0px'
+};
+
+const observer = new IntersectionObserver(function(entries) {
+    entries.forEach(entry => {
+        if (entry.isIntersecting) {
+            entry.target.style.animationPlayState = 'running';
+            observer.unobserve(entry.target);
+        }
+    });
+}, observerOptions);
+
+// Observe all insight items
+document.querySelectorAll('.insight-item').forEach(item => {
+    item.style.opacity = '0';
+    item.style.animation = 'fadeInUp 0.6s ease forwards paused';
+    observer.observe(item);
+});
+</script>
+{% endblock %} 

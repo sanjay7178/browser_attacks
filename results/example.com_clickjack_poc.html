@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Clickjacking Exploit POC - example.com</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .warning { color: red; font-weight: bold; }
+        iframe { border: 2px solid red; }
+    </style>
+</head>
+<body>
+    <h1>Clickjacking Vulnerability POC</h1>
+    <p class="warning">⚠️ This website is vulnerable to clickjacking attacks!</p>
+    <p><strong>Target URL:</strong> https://example.com</p>
+    <p><strong>Missing Header:</strong> X-Frame-Options</p>
+    
+    <h2>Proof of Concept</h2>
+    <p>The iframe below demonstrates that the target site can be embedded:</p>
+    <iframe src="https://example.com" width="800" height="600" title="Vulnerable Site"></iframe>
+    
+    <h2>Risk</h2>
+    <p>Attackers can overlay invisible elements on top of this iframe to trick users into clicking on unintended actions.</p>
+</body>
+</html>

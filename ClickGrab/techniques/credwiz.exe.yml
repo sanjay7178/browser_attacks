@@ -1,0 +1,37 @@
+name: credwiz.exe
+added_at: 2025-01-08
+platform: windows
+info: >
+  The `credwiz.exe` application is the Credential Backup and Restore Wizard.
+  The first screen exposes a **Browse...** button that immediately opens an
+  Explorer file dialog (save location picker).
+presentation: gui
+lures:
+  - nickname: "Your Passwords Have Been Compromised!"
+    preamble: >
+      To lock down your device, follow these steps:
+    steps:
+      - "Press **Win-R** on your keyboard."
+      - "Type **`credwiz`** and press **Enter**."
+      - "Click next to continue."
+      - "On the first screen, click **Browse...** (Explorer dialog opens)."
+      - "Navigate to the requested path and continue."
+    epilogue: >
+      Once you have completed these steps, you can continue to use this application.
+    capabilities:
+      - MOTW
+      - File Explorer
+  - nickname: "Your device credentials are invalid."
+    preamble: >
+      Your device credentials are invalid. To recover valid credentials, follow these steps:
+    steps:
+      - "Press the **Win** key on your keyboard."
+      - "Type **`credwiz`** in the search box."
+      - "Press **Ctrl-Shift-Enter** to run elevated and click **Yes** if prompted."
+      - "Click next to continue."
+      - "On the first screen, click **Browse...** (Explorer dialog opens)."
+      - "Navigate to the requested path and continue."
+    capabilities:
+      - MOTW
+      - File Explorer
+      - UAC
