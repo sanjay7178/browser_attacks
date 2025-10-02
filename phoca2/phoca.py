@@ -30,7 +30,7 @@ class Detector:
     ]
 
     def __init__(self, http_port=80, https_port=443, numIterations=10, 
-                modelFile="./classifier.cls", rawData=False,
+                modelFile="/home/sanjay7178/browser_attacks/phoca2/classifier.cls", rawData=False,
                 outputFile=None, outputFormat="csv"):
 
         self.http_port = http_port
@@ -228,5 +228,26 @@ if(__name__ == '__main__'):
                         rawData=args['raw_data'],
                         outputFile=args['output_file'],
                         outputFormat=args['output_format'])
-
+    print("Starting Phoca MITM Detection...")
+    print("-----------------------------------")
+    print(args['domain'])
+    print(args['input_file'])
+    print(args['raw_data'])
+    print(args['output_file'])
+    print(args['num_iterations'])
+    print(args['http_port'])
+    print(args['https_port'])
+    print(args['output_format'])
+    print("-----------------------------------")
     detector.crawl(domains)
+
+def phoca_url_detect(url : str) -> str:
+    detector = Detector(http_port=80, 
+                        https_port=443, 
+                        numIterations=10,
+                        rawData=False,
+                        outputFile=None,
+                        outputFormat="None")
+    result = detector.testSite(url)
+    # print(result)
+    return result['classification']

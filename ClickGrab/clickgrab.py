@@ -40,11 +40,12 @@ from dotenv import load_dotenv
 from OTXv2 import OTXv2
 from OTXv2 import IndicatorTypes
 
-from models import (
+from .models import (
     ClickGrabConfig, AnalysisResult, AnalysisReport, 
     AnalysisVerdict, ReportFormat, CommandRiskLevel
 )
-import extractors
+# local path imports
+from . import extractors
 
 # Configure logging
 logging.basicConfig(
@@ -793,6 +794,42 @@ def generate_json_report(results: List[AnalysisResult], config: ClickGrabConfig)
     return report_path
 
 
+def return_json_report(results: List[AnalysisResult], config: ClickGrabConfig) -> str:
+    """Return a JSON report as a string.
+    
+    Args:
+        results: List of analysis results
+        config: ClickGrab configuration
+    Returns:
+        str: JSON report as a string
+    """
+    # Create report structure
+    report = AnalysisReport(
+        timestamp=datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        total_sites_analyzed=len(results),
+        summary={
+            "suspicious_sites": sum(1 for result in results if result.Verdict == AnalysisVerdict.SUSPICIOUS.value),
+            "powershell_commands": sum(len(result.PowerShellCommands) for result in results),
+            "base64_strings": sum(len(result.Base64Strings) for result in results),
+            "clipboard_manipulation": sum(len(result.ClipboardManipulation) for result in results),
+            "captcha_elements": sum(len(result.CaptchaElements) for result in results),
+            "high_risk_commands": sum(len(result.HighRiskCommands) for result in results),
+            "encoded_powershell": sum(len(result.EncodedPowerShell) for result in results),
+            "powershell_downloads": sum(len(result.PowerShellDownloads) for result in results),
+            "obfuscated_javascript": sum(len(result.ObfuscatedJavaScript) for result in results),
+            "suspicious_commands": sum(len(result.SuspiciousCommands) for result in results),
+            "suspicious_keywords": sum(len(result.SuspiciousKeywords) for result in results),
+            "ip_addresses": sum(len(result.IPAddresses) for result in results),
+            "clipboard_commands": sum(len(result.ClipboardCommands) for result in results),
+            "javascript_redirects": sum(len(result.JavaScriptRedirects) for result in results),
+            "average_threat_score": round(sum(result.ThreatScore for result in results) / len(results)) if results else 0
+        },
+        sites=results
+    )
+    
+    # Return JSON as string
+    return report.model_dump_json(exclude_none=True, indent=2)
+
 def generate_csv_report(results: List[AnalysisResult], config: ClickGrabConfig) -> str:
     """Generate a CSV report from analysis results.
     
@@ -1040,6 +1077,91 @@ def main():
             print(f"- {report_type}: {report_path}")
     else:
         logger.warning("No results to generate reports from.")
+
+
+def clickgrab(
+    url: Optional[str] = None,
+    use_urlhaus: bool = False,
+    limit: Optional[int] = None,
+    tags: Optional[List[str]] = None
+) -> Optional[str]:
+    """Analyze a single URL or fetch URLs from URLhaus and return the JSON report as a string.
+    
+    Args:
+        url: The URL to analyze (optional if use_urlhaus is True)
+        use_urlhaus: If True, fetch URLs from URLhaus instead of analyzing a single URL
+        limit: Maximum number of URLs to fetch from URLhaus (only used if use_urlhaus is True)
+        tags: List of tags to filter URLhaus results (e.g., ['FakeCaptcha', 'ClickFix'])
+    
+    Returns:
+        Optional[str]: JSON report as a string if successful, None otherwise
+    """
+    try:
+        results = []
+        
+        if use_urlhaus:
+            # Fetch URLs from URLhaus
+            logger.info("Fetching URLs from URLhaus...")
+            urls = download_urlhaus_data(limit=limit, tags=tags)
+            
+            if not urls:
+                logger.error("No URLs found from URLhaus matching the criteria")
+                return None
+            
+            logger.info(f"Analyzing {len(urls)} URLs from URLhaus...")
+            
+            # Analyze each URL from URLhaus
+            for url_item in urls:
+                result = analyze_url(url_item)
+                if result:
+                    results.append(result)
+        else:
+            # Analyze a single URL
+            if not url:
+                logger.error("No URL provided for analysis")
+                return None
+            
+            result = analyze_url(url)
+            
+            if result is None:
+                logger.error(f"Failed to analyze URL: {url}")
+                return None
+            
+            results = [result]
+        
+        if not results:
+            logger.error("No analysis results generated")
+            return None
+        
+        # Create a minimal config object for report generation
+        config = ClickGrabConfig(
+            analyze=url if url else "urlhaus",
+            output_dir="reports",
+            format="json",
+            debug=False
+        )
+        
+        # Generate and return JSON report as string
+        json_report = return_json_report(results, config)
+        return json_report
+        
+    except Exception as e:
+        logger.error(f"Error in clickgrab function: {e}", exc_info=True)
+        return None
+
+
+def clickgrab_url_detect(url: str) -> Optional[str]:
+    """Alias for clickgrab() function - analyze a single URL and return JSON report.
+    
+    This is a convenience wrapper for compatibility with the main.py interface.
+    
+    Args:
+        url: The URL to analyze
+        
+    Returns:
+        Optional[str]: JSON report as a string if successful, None otherwise
+    """
+    return clickgrab(url=url)
 
 
 if __name__ == "__main__":
